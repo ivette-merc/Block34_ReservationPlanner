@@ -24,9 +24,9 @@ const createTables = async () => {
         id UUID PRIMARY KEY, 
         reservation_date TIMESTAMP NOT NULL DEFAULT now(),
         customer_id UUID REFERENCES customer(id) NOT NULL,
-       customer_name VARCHAR(75) REFERENCES customer (name) NOT NULL,
+        customer_name VARCHAR(75) REFERENCES customer (name) NOT NULL,
         restaurant_id UUID REFERENCES restaurant(id) NOT NULL,
-       restaurant_name VARCHAR(75) REFERENCES restaurant (name) NOT NULL
+        restaurant_name VARCHAR(75) REFERENCES restaurant (name) NOT NULL
     );
     
     `;
@@ -75,6 +75,27 @@ const fetchReservation = async () => {
   return rows;
 };
 
+const fetchCustomer = async () => {
+  const SQL = /*SQL*/ `
+    SELECT * from customer;
+    `;
+  const response = await client.query(SQL);
+  return response.rows;
+};
+
+const fetchRestaurant = async () => {
+  const SQL = /*SQL*/ `
+    SELECT * from restaurant;
+    `;
+  const response = await client.query(SQL);
+  return response.rows;
+};
+
+const deleteReservation = async () => {
+  const SQL = /*SQL*/ `DELETE FROM reservation WHERE id=$1 and customer_id=$2 RETURNING *`;
+  await client.query(SQL, [id, customer_id])
+}
+
 const seed = async () => {
   await Promise.all([
     createCustomer("Ashley"),
@@ -115,21 +136,7 @@ const seed = async () => {
   console.log("reservations created:", await fetchReservation());
 };
 
-const fetchCustomer = async () => {
-  const SQL = /*SQL*/ `
-    SELECT * from customer;
-    `;
-  const response = await client.query(SQL);
-  return response.rows;
-};
 
-const fetchRestaurant = async () => {
-  const SQL = /*SQL*/ `
-    SELECT * from restaurant;
-    `;
-  const response = await client.query(SQL);
-  return response.rows;
-};
 
 module.exports = {
   client,
@@ -138,5 +145,7 @@ module.exports = {
   createRestaurant,
   fetchCustomer,
   fetchRestaurant,
+  fetchReservation,
+  deleteReservation,
   seed,
 };
