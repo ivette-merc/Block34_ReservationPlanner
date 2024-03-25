@@ -22,11 +22,11 @@ const createTables = async () => {
 
     CREATE TABLE reservation(
         id UUID PRIMARY KEY, 
-        reservation_date TIMESTAMP NOT NULL DEFAULT now(),
+        reservation_date DATE NOT NULL,
         customer_id UUID REFERENCES customer(id) NOT NULL,
-        customer_name VARCHAR(75) REFERENCES customer (name) NOT NULL,
-        restaurant_id UUID REFERENCES restaurant(id) NOT NULL,
-        restaurant_name VARCHAR(75) REFERENCES restaurant (name) NOT NULL
+        party_count INTEGER NOT NULL,
+        restaurant_id UUID REFERENCES restaurant(id) NOT NULL
+        
     );
     
     `;
@@ -50,24 +50,24 @@ const createRestaurant = async (name) => {
 };
 
 const createReservation = async ({
+  reservation_date,
   customer_id,
-  customer_name,
+  party_count,
   restaurant_id,
-  restaurant_name,
 }) => {
   const SQL = /*SQL*/ `
-   INSERT INTO reservation(id, customer_id,customer_name, restaurant_id, restaurant_name) VALUES($1, $2, $3, $4, $5) RETURNING *
- 
- `;
+   INSERT INTO reservation(id, reservation_date, customer_id, party_count, restaurant_id) VALUES($1, $2, $3, $4, $5) RETURNING *`;
+
   const response = await client.query(SQL, [
     uuid.v4(),
+    reservation_date,
     customer_id,
-    customer_name,
+    party_count,
     restaurant_id,
-    restaurant_name,
   ]);
   return response.rows[0];
 };
+
 
 const fetchReservation = async () => {
   const SQL = /*SQL*/ `SELECT * from reservation`;
@@ -93,8 +93,8 @@ const fetchRestaurant = async () => {
 
 const deleteReservation = async () => {
   const SQL = /*SQL*/ `DELETE FROM reservation WHERE id=$1 and customer_id=$2 RETURNING *`;
-  await client.query(SQL, [id, customer_id])
-}
+  await client.query(SQL, [id, customer_id]);
+};
 
 const seed = async () => {
   await Promise.all([
@@ -112,31 +112,26 @@ const seed = async () => {
 
   await Promise.all([
     createReservation({
-      customer_id: customer[0].id,
-      customer_name: customer[0].name,
-      restaurant_id: restaurant[0].id,
-      restaurant_name: restaurant[0].name,
       reservation_date: "3/23/24",
+      customer_id: customer[0].id,
+      party_count: 4,
+      restaurant_id: restaurant[0].id,
     }),
     createReservation({
-      customer_id: customer[1].id,
-      customer_name: customer[1].name,
-      restaurant_id: restaurant[1].id,
-      restaurant_name: restaurant[1].name,
       reservation_date: "3/24/24",
+      customer_id: customer[1].id,
+      party_count: 2,
+      restaurant_id: restaurant[1].id,
     }),
     createReservation({
-      customer_id: customer[2].id,
-      customer_name: customer[2].name,
-      restaurant_id: restaurant[2].id,
-      restaurant_name: restaurant[2].name,
       reservation_date: "3/25/24",
+      customer_id: customer[2].id,
+      party_count: 20,
+      restaurant_id: restaurant[2].id,
     }),
   ]);
   console.log("reservations created:", await fetchReservation());
 };
-
-
 
 module.exports = {
   client,
