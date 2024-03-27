@@ -68,7 +68,6 @@ const createReservation = async ({
   return response.rows[0];
 };
 
-
 const fetchReservation = async () => {
   const SQL = /*SQL*/ `SELECT * from reservation`;
   const { rows } = await client.query(SQL);
@@ -91,9 +90,15 @@ const fetchRestaurant = async () => {
   return response.rows;
 };
 
-const deleteReservation = async () => {
-  const SQL = /*SQL*/ `DELETE FROM reservation WHERE id=$1 and customer_id=$2 RETURNING *`;
-  await client.query(SQL, [id, customer_id]);
+const deleteReservation = async (customer_id, id) => {
+  const SQL = /*SQL*/ `DELETE FROM reservation WHERE id=$1 and customer_id=$2`;
+  try {
+    const response = await client.query(SQL, [id, customer_id]);
+    return response;
+  } catch (error) {
+    console.error("Error deleting reservation:", error);
+    throw error;
+  }
 };
 
 const seed = async () => {
@@ -138,6 +143,7 @@ module.exports = {
   createTables,
   createCustomer,
   createRestaurant,
+  createReservation,
   fetchCustomer,
   fetchRestaurant,
   fetchReservation,
